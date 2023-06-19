@@ -5,32 +5,41 @@ import process from "process";
 
 dotenv.config();
 
-// AWS CONFIGURATION
-const {
-  STORAGE_ENDPOINT,
-  STORAGE_ACCESS_KEY_ID,
-  STORAGE_SECRET_ACCESS_KEY,
-  STORAGE_PACKAGES_BUCKET,
-} = process.env;
+let database, sts;
 
-// AWS CREDENTIALS
-const awsCredentials = {
-  region: "us-west-2",
-  accessKeyId: STORAGE_ACCESS_KEY_ID,
-  secretAccessKey: STORAGE_SECRET_ACCESS_KEY,
-};
+try {
+  // AWS CONFIGURATION
+  const {
+    STORAGE_ENDPOINT = "",
+    STORAGE_ACCESS_KEY_ID = "",
+    STORAGE_SECRET_ACCESS_KEY = "",
+    STORAGE_PACKAGES_BUCKET = "",
+    ATHENA_DB = "",
+    ATHENA_CATALOG = "",
+  } = process.env;
 
-AWS.config.update(awsCredentials);
+  // AWS CREDENTIALS
+  const awsCredentials = {
+    region: "us-west-2",
+    accessKeyId: STORAGE_ACCESS_KEY_ID,
+    secretAccessKey: STORAGE_SECRET_ACCESS_KEY,
+  };
 
-// ATHENA EXPRESS CONNECTION
-const athenaExpressConfig = {
-  aws: AWS,
-  s3: `s3://${STORAGE_PACKAGES_BUCKET}`,
-  db: "default",
-  catalog: "jupiter_dev",
-}; //configuring athena-express with aws sdk object
+  AWS.config.update(awsCredentials);
 
-const database = new AthenaExpress(athenaExpressConfig);
-const sts = new AWS.STS();
+  // ATHENA EXPRESS CONNECTION
+  const athenaExpressConfig = {
+    aws: AWS,
+    s3: `s3://${STORAGE_PACKAGES_BUCKET}`,
+    db: ATHENA_DB,
+    catalog: ATHENA_CATALOG,
+  }; //configuring athena-express with aws sdk object
+
+  database = new AthenaExpress(athenaExpressConfig);
+  sts = new AWS.STS();
+} catch (e) {
+  console.log("ATHENA CONNECTION ERROR: ", e.message);
+  console.log("ATHENA CONNECTION ERROR: ", e.stack);
+}
 
 export { database, sts };
